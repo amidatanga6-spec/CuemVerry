@@ -16,10 +16,29 @@ const PhoneInput = ({ value, onChange, error, id, name }) => {
             itiRef.current = intlTelInput(inputElement, {
                 initialCountry: 'auto',
                 geoIpLookup: (callback) => {
-                    fetch('https://ipapi.co/json/')
+                    const cached = sessionStorage.getItem('user_country');
+                    if (cached) {
+                        callback(cached);
+                        return;
+                    }
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+                    fetch('https://ip-api.com/json/?fields=countryCode', {
+                        signal: controller.signal
+                    })
                         .then((res) => res.json())
-                        .then((data) => callback(data.country_code))
-                        .catch(() => callback('vn'));
+                        .then((data) => {
+                            clearTimeout(timeoutId);
+                            const countryCode = data.countryCode?.toLowerCase() || 'vn';
+                            sessionStorage.setItem('user_country', countryCode);
+                            callback(countryCode);
+                        })
+                        .catch(() => {
+                            clearTimeout(timeoutId);
+                            callback('vn');
+                        });
                 },
                 utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@25.13.2/build/js/utils.js',
                 preferredCountries: ['vn', 'us', 'gb'],
@@ -47,7 +66,10 @@ const PhoneInput = ({ value, onChange, error, id, name }) => {
                     } else {
                         onChange(inputElement.value);
                     }
-                    isUpdatingRef.current = false;
+                    
+                    setTimeout(() => {
+                        isUpdatingRef.current = false;
+                    }, 0);
                 }
             };
 
@@ -65,7 +87,7 @@ const PhoneInput = ({ value, onChange, error, id, name }) => {
                 }
             };
         }
-    }, [onChange]);
+    }, []);
 
     useEffect(() => {
         if (itiRef.current && value && !isUpdatingRef.current) {
