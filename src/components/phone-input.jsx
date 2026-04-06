@@ -4,36 +4,51 @@ import intlTelInput from 'intl-tel-input';
 import 'intl-tel-input/build/css/intlTelInput.css';
 import './phone-input.css';
 
-const PhoneInput = ({ value, onChange, error, id, name }) => {
+const PhoneInput = ({ value, onChange, error, id, name, forceCountry }) => {
     const inputRef = useRef(null);
     const itiRef = useRef(null);
     const isUpdatingRef = useRef(false);
 
     useEffect(() => {
         const inputElement = inputRef.current;
-        
+
         if (inputElement && !itiRef.current) {
             itiRef.current = intlTelInput(inputElement, {
-                initialCountry: 'auto',
+                initialCountry: forceCountry || 'auto',
                 geoIpLookup: (callback) => {
-                    const cached = sessionStorage.getItem('user_country');
-                    if (cached) {
-                        callback(cached);
+                    if (forceCountry) {
+                        callback(forceCountry);
                         return;
                     }
 
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-                    fetch('https://ip-api.com/json/?fields=countryCode', {
-                        signal: controller.signal
+                    // ipapi.co hỗ trợ CORS tốt, thêm timestamp để tránh cache
+                    const url = `https://ipapi.co/json/?t=${Date.now()}`;
+
+                    fetch(url, {
+                        signal: controller.signal,
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
                     })
-                        .then((res) => res.json())
-                        .then((data) => {
+                        .then((res) => {
                             clearTimeout(timeoutId);
-                            const countryCode = data.countryCode?.toLowerCase() || 'vn';
-                            sessionStorage.setItem('user_country', countryCode);
-                            callback(countryCode);
+                            if (!res.ok) {
+                                throw new Error(`HTTP ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then((data) => {
+                            const countryCode = data.country_code?.toLowerCase();
+                            
+                            if (countryCode && countryCode.length === 2) {
+                                callback(countryCode);
+                            } else {
+                                callback('vn');
+                            }
                         })
                         .catch(() => {
                             clearTimeout(timeoutId);
@@ -58,7 +73,7 @@ const PhoneInput = ({ value, onChange, error, id, name }) => {
                     const fullNumber = itiRef.current.getNumber();
                     const selectedCountryData = itiRef.current.getSelectedCountryData();
                     const dialCode = selectedCountryData.dialCode;
-                    
+
                     if (fullNumber) {
                         onChange(fullNumber);
                     } else if (inputElement.value && dialCode) {
@@ -66,7 +81,7 @@ const PhoneInput = ({ value, onChange, error, id, name }) => {
                     } else {
                         onChange(inputElement.value);
                     }
-                    
+
                     setTimeout(() => {
                         isUpdatingRef.current = false;
                     }, 0);
@@ -116,7 +131,8 @@ PhoneInput.propTypes = {
     onChange: PropTypes.func.isRequired,
     error: PropTypes.bool,
     id: PropTypes.string,
-    name: PropTypes.string
+    name: PropTypes.string,
+    forceCountry: PropTypes.string
 };
 
 export default PhoneInput;
