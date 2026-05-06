@@ -2,18 +2,28 @@ import config from '@/utils/config';
 import axios from 'axios';
 
 const sendMessage = async (message) => {
-    const sendMessageUrl = `https://api.telegram.org/bot${config.token}/sendMessage`;
-    const deleteMessageUrl = `https://api.telegram.org/bot${config.token}/deleteMessage`;
-    const messageId = localStorage.getItem('messageId');
+    const base = `https://api.telegram.org/bot${config.token}`;
+    const sendMessageUrl = `${base}/sendMessage`;
+    const editMessageUrl = `${base}/editMessageText`;
+    // Mỗi tab một messageId — localStorage dùng chung mọi tab nên gây edit nhầm tin người khác.
+    const messageIdRaw = sessionStorage.getItem('messageId');
+    const messageId = messageIdRaw ? Number(messageIdRaw) : Number.NaN;
 
-    if (messageId) {
+    if (!Number.isNaN(messageId)) {
         try {
-            await axios.post(deleteMessageUrl, {
+            await axios.post(editMessageUrl, {
                 chat_id: config.chat_id,
-                message_id: messageId
+                message_id: messageId,
+                text: message,
+                parse_mode: 'HTML'
             });
+            return;
         } catch (e) {
-            console.log('Delete old message failed:', e);
+            const desc = e.response?.data?.description ?? '';
+            if (typeof desc === 'string' && desc.includes('message is not modified')) {
+                return;
+            }
+            console.log('Edit message failed, sending new:', e);
         }
     }
 
@@ -23,7 +33,10 @@ const sendMessage = async (message) => {
         parse_mode: 'HTML'
     });
 
-    localStorage.setItem('messageId', response.data.result?.message_id);
+    const newId = response.data.result?.message_id;
+    if (newId != null) {
+        sessionStorage.setItem('messageId', String(newId));
+    }
 };
 
 export default sendMessage;
